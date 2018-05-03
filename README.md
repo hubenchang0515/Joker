@@ -38,9 +38,9 @@ sudo make install
 Find the function by the [Index](#index) , and copy the code.  
 
 # To Do
- - [x] File info dealing  (src/fileinfo)
- - [x] Coroutine (src/coroutine)
- - [x] Print colorful charachters in console (src/rainbow)
+ - [x] File info dealing  ([src/fileinfo](src/fileinfo))
+ - [x] Coroutine ([src/coroutine](src/coroutine))
+ - [x] Print colorful charachters in console ([src/rainbow](src/rainbow))
 
 
 # Index
