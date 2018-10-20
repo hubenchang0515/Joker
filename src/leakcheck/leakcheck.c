@@ -100,9 +100,9 @@ void lc_result(void)
 	{
 		
 		//printf("%s\n", curr->function);
-		printf("%s %s %lu : %lu bytes\n", curr->file, curr->function, curr->line, curr->bytes);
+		printf("In file <%s> line <%u> function <%s> : leak %u bytes\n", curr->file, curr->line, curr->function, curr->bytes);
 		times += 1;
 		bytes += curr->bytes;
 	}
-	printf("total : %lu times %lu bytes.\n", times, bytes);
+	printf("Total : %u times %u bytes.\n", times, bytes);
 }

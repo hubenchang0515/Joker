@@ -47,7 +47,7 @@ int main()
 
 Run
 ```C
-main.c func4 22 : 256 bytes
-main.c func2 11 : 64 bytes
-total : 2 times 320 bytes.
+In file <main.c> line <22> function <func4> : leak 256 bytes
+In file <main.c> line <11> function <func2> : leak 64 bytes
+Total : 2 times 320 bytes.
 ```
