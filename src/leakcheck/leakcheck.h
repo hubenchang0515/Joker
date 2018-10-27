@@ -5,13 +5,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct lc_node_t lc_node_t;
+typedef struct lc_detail_node_t lc_detail_node_t;
+typedef struct lc_statistic_node_t lc_statistic_node_t;
 
-extern lc_node_t* lc_list_head;
+extern lc_detail_node_t* lc_detail_list_head;
 
 void* lc_malloc(size_t bytes, const char* file, const char* function, size_t line);
 int lc_free(void* ptr);
-void lc_result(void);
+void lc_detail(void);
+void lc_statistic(void);
 
 #ifdef malloc
 	#undef malloc

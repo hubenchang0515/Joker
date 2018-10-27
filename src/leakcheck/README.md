@@ -4,50 +4,75 @@ A simple memory leak analyzer.
 # Usage Demo
 ```C
 #include "leakcheck.h"
+#include <time.h>
 
-void func1()
+typedef void* ptr_t;
+
+ptr_t p1[10];
+ptr_t p2[10];
+
+void test_malloc1(size_t index, size_t bytes)
 {
-	int* p = malloc(32);
-	free(p);
+	p1[index] = malloc(bytes);
 }
 
-void func2()
+void test_malloc2(size_t index, size_t bytes)
 {
-	int* p = malloc(64); // leak
+	p2[index] = malloc(bytes);
 }
 
-void func3()
+void test_free1(size_t index)
 {
-	int* p = malloc(128);
-	free(p);
+	free(p1[index]);
 }
 
-void func4()
+void test_free2(size_t index)
 {
-	int* p = malloc(256); // leak
+	free(p2[index]);
 }
 
-void func5()
-{
-	int* p = malloc(512);
-	free(p);
-}
+
 
 int main()
 {
-	func1();
-	func2();
-	func3();
-	func4();
-	func5();
-	lc_result();
-	return 0;
+	/* 分配内存 */
+	for(size_t i = 0; i < 10; i++)
+	{
+		test_malloc1(i,100*i + 100);
+		test_malloc2(i,200*i + 200);
+	}
+	
+	/* 随机释放部分内存 */
+	srand(time(NULL));
+	for(size_t i = 0; i < 7; i++)
+	{
+		test_free1(rand() % 10);
+		test_free2(rand() % 10);
+	}
+	
+	lc_detail();
+	lc_statistic();
 }
 ```
 
-Run
+Rusult
 ```C
-In file <main.c> line <22> function <func4> : leak 256 bytes
-In file <main.c> line <11> function <func2> : leak 64 bytes
-Total : 2 times 320 bytes.
+[Details]
+In file <main.c> line <16> function <test_malloc2> : leak 2000 bytes
+In file <main.c> line <11> function <test_malloc1> : leak 900 bytes
+In file <main.c> line <16> function <test_malloc2> : leak 1600 bytes
+In file <main.c> line <11> function <test_malloc1> : leak 800 bytes
+In file <main.c> line <11> function <test_malloc1> : leak 700 bytes
+In file <main.c> line <16> function <test_malloc2> : leak 1200 bytes
+In file <main.c> line <11> function <test_malloc1> : leak 600 bytes
+In file <main.c> line <11> function <test_malloc1> : leak 500 bytes
+In file <main.c> line <16> function <test_malloc2> : leak 600 bytes
+In file <main.c> line <16> function <test_malloc2> : leak 200 bytes
+Total : 10 times 9100 bytes.
+
+[Statistics]
+In file <main.c> line <16> : leak 5 times 5600 bytes
+In file <main.c> line <11> : leak 5 times 3500 bytes
+Total : 10 times 9100 bytes.
+
 ```
