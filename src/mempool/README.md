@@ -8,6 +8,7 @@ int MemoryPoolCreate(mPool_t* pool, size_t unitSize, size_t unitCount);
 void* MemoryPoolAlloc(mPool_t* pool, size_t size);
 int MemoryPoolFree(mPool_t* pool, void* addr);
 void MemoryPoolDestroy(mPool_t* pool);
+void MemoryPoolDebug(mPool_t* pool);
 ```
 
 ## Usage Demo
