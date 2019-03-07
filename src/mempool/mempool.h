@@ -16,28 +16,34 @@ typedef struct JockerMemoryUnitStruct mUnit_t;
 /* Struct of memory pool */
 struct JockerMemoryPoolStruct
 {
-    size_t unitSize;       // size of a unit
-    size_t unitCount;      // unit count of per-block 
-    mBlock_t* firstBlock;  // the first memory block
-    mBlock_t* lastBlock;  // the last memory block
-    char error[JOCKER_MEMPOOL_ERROR_SIZE];   // error message
+    size_t unitSize;                        // size of a unit
+    size_t unitCount;                       // unit count of per-block 
+    mBlock_t* firstBlock;                   // the first memory block
+    mBlock_t* lastBlock;                    // the last memory block
+    mBlock_t* firstAvailableBlock;          // the first available memory block
+    mBlock_t* lastAvailableBlock;           // the first available memory block
+    char error[JOCKER_MEMPOOL_ERROR_SIZE];  // error message
 };
 
 /* Struct of memory block */
 struct JockerMemoryBlockStruct
 {
-    size_t firstUnit;    // the first available memory unit
-    size_t available;    // count of available unit  
-    mBlock_t* prevBlock; // the previous memory block
-    mBlock_t* nextBlock; // the next memory block
-    uint8_t datas[];     // flexible array [index][data]
+    size_t firstAvailable;          // the first available memory unit
+    size_t lastAvailable;
+    size_t availableUnitCount;      // count of available unit  
+    mBlock_t* prevBlock;            // the previous memory block
+    mBlock_t* nextBlock;            // the next memory block
+    mBlock_t* prevAvailableBlock;   // the previous available memory block
+    mBlock_t* nextAvailableBlock;   // the next available memory block
+    uint8_t units[];                // flexible array of mUnit_t[]
 };
 
 /* Struct of memory unit */
 struct JockerMemoryUnitStruct
 {
-    size_t nextUnit; // the next available memory unit
-    uint8_t data[];  // flexible array
+    size_t nextAvailable;   // the next available memory unit
+    mBlock_t* block;        // belong to which block
+    uint8_t data[];         // flexible array
 };
 
 #ifdef __cplusplus
@@ -49,6 +55,7 @@ int MemoryPoolCreate(mPool_t* pool, size_t unitSize, size_t unitCount);
 void* MemoryPoolAlloc(mPool_t* pool, size_t size);
 int MemoryPoolFree(mPool_t* pool, void* addr);
 void MemoryPoolDestroy(mPool_t* pool);
+void MemoryPoolDebug(mPool_t* pool);
 
 #ifdef __cplusplus
     }
