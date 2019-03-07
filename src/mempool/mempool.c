@@ -23,6 +23,8 @@ int MemoryPoolCreate(mPool_t* pool, size_t unitSize, size_t unitCount)
 {
     pool->unitSize = unitSize;
     pool->unitCount = unitCount;
+    pool->blockCount = 0;
+    pool->availableBlockCount = 0;
     pool->firstBlock = NULL;
     pool->lastBlock = NULL;
     pool->firstAvailableBlock = NULL;
@@ -96,6 +98,13 @@ void MemoryPoolDestroy(mPool_t* pool)
         next = current->nextBlock;
         free(current);
     }
+
+    pool->blockCount = 0;
+    pool->availableBlockCount = 0;
+    pool->firstBlock = NULL;
+    pool->lastBlock = NULL;
+    pool->firstAvailableBlock = NULL;
+    pool->lastAvailableBlock = NULL;
 }
 
 
