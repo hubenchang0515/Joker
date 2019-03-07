@@ -6,7 +6,6 @@ static void MemoryPoolSetError(mPool_t* pool, const char* error);
 static mBlock_t* MemoryPoolAddBlock(mPool_t* pool);
 
 static void* MemoryPoolAllocFromBlock(mPool_t* pool, mBlock_t* block);
-static void* MemoryPoolFreeFromBlock(mPool_t* pool, mBlock_t* block, void* addr);
 
 static void MemoryPoolInsertTotalBlockList(mPool_t* pool, mBlock_t* block);
 static void MemoryPoolRemoveTotalBlockList(mPool_t* pool, mBlock_t* block);
@@ -103,10 +102,26 @@ void MemoryPoolDestroy(mPool_t* pool)
 /* Debug */
 void MemoryPoolDebug(mPool_t* pool)
 {
-    for(mBlock_t* iter = pool->firstBlock; iter != NULL; iter = iter->nextBlock)
+    size_t totalUnit = pool->blockCount * pool->unitCount;
+    size_t availableUnit = 0;
+    for(mBlock_t* block = pool->firstAvailableBlock; block != NULL; block = block->nextAvailableBlock)
     {
-        printf("Block : %p \n", iter);
+        availableUnit += block->availableUnitCount;
     }
+    size_t totalMemory = totalUnit * pool->unitSize;
+    size_t availableMemory = availableUnit * pool->unitSize;
+
+    printf("***************Memory Pool at 0x%p***************\n", pool);
+    printf("* unit size         : %u \n", pool->unitSize);
+    printf("* block unit        : %u \n", pool->unitCount);
+    printf("*******************************************************\n");
+    printf("* total block       : %u \n", pool->blockCount);
+    printf("* available block   : %u \n", pool->availableBlockCount);
+    printf("* total unit        : %u \n", totalUnit);
+    printf("* available unit    : %u \n", availableUnit);
+    printf("* total memory      : %u \n", totalMemory);
+    printf("* available memory  : %u \n", availableMemory);
+    printf("*******************************************************\n");
 }
 
 
@@ -216,6 +231,8 @@ static void MemoryPoolInsertTotalBlockList(mPool_t* pool, mBlock_t* block)
         pool->lastBlock->nextBlock = block;
         pool->lastBlock = block;
     }
+
+    pool->blockCount += 1;
 }
 
 
@@ -244,6 +261,8 @@ static void MemoryPoolRemoveTotalBlockList(mPool_t* pool, mBlock_t* block)
     {
         block->nextBlock->prevBlock = block->prevBlock;
     }
+
+    pool->blockCount -= 1;
 }
 
 
@@ -266,6 +285,8 @@ static void MemoryPoolInsertAvailableBlockList(mPool_t* pool, mBlock_t* block)
         pool->lastAvailableBlock->nextAvailableBlock = block;
         pool->lastAvailableBlock = block;
     }
+
+    pool->availableBlockCount += 1;
 }
 
 
@@ -294,4 +315,6 @@ static void MemoryPoolRemoveAvailableBlockList(mPool_t* pool, mBlock_t* block)
     {
         block->nextAvailableBlock->prevAvailableBlock = block->prevAvailableBlock;
     }
+
+    pool->availableBlockCount -= 1;
 }

@@ -18,6 +18,8 @@ struct JockerMemoryPoolStruct
 {
     size_t unitSize;                        // size of a unit
     size_t unitCount;                       // unit count of per-block 
+    size_t blockCount;                      // block count
+    size_t availableBlockCount;             // available block count
     mBlock_t* firstBlock;                   // the first memory block
     mBlock_t* lastBlock;                    // the last memory block
     mBlock_t* firstAvailableBlock;          // the first available memory block
