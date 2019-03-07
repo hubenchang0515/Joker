@@ -31,7 +31,7 @@ struct JockerMemoryPoolStruct
 struct JockerMemoryBlockStruct
 {
     size_t firstAvailable;          // the first available memory unit
-    size_t lastAvailable;
+    size_t lastAvailable;           // the last available memory unit
     size_t availableUnitCount;      // count of available unit  
     mBlock_t* prevBlock;            // the previous memory block
     mBlock_t* nextBlock;            // the next memory block
