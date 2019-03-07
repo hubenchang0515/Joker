@@ -64,16 +64,26 @@ int MemoryPoolFree(mPool_t* pool, void* addr)
         return EXIT_FAILURE;
     }
 
+    // find the uint and block
     mUnit_t* unit = (mUnit_t*)((uint8_t*)(addr) - sizeof(mUnit_t));
     mBlock_t* block = unit->block;
+
+    // find the last available unit of this block
     size_t elementSize = sizeof(mUnit_t) + pool->unitSize;
-    block->lastAvailable = (((uint8_t*)unit) - ((uint8_t*)(block->units))) / elementSize;
+    mUnit_t* lastAvailable = (mUnit_t*)(block->units + elementSize * block->lastAvailable);
+    
+    // next available of the last available unit is this free unit
+    lastAvailable->nextAvailable = (((uint8_t*)unit) - ((uint8_t*)(block->units))) / elementSize;
+    
+    // the last available is this free unit
+    block->lastAvailable = lastAvailable->nextAvailable;
     block->availableUnitCount += 1;
 
     // insert into available block link-list
     if(block->availableUnitCount == 1)
     {
         MemoryPoolInsertAvailableBlockList(pool, block);
+        block->firstAvailable = block->lastAvailable;
     }
 
     // remove empty block
