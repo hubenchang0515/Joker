@@ -2,6 +2,9 @@
 #include <string.h>
 #include <stdio.h>
 
+static void MemoryPoolMutexLock(mPool_t* pool);
+static void MemoryPoolMutexUnlock(mPool_t* pool);
+
 static void MemoryPoolSetError(mPool_t* pool, const char* error);
 static mBlock_t* MemoryPoolAddBlock(mPool_t* pool);
 
@@ -19,10 +22,31 @@ const char* MemoryPoolError(mPool_t* pool)
 }
 
 /* Create a memory pool */
-int MemoryPoolCreate(mPool_t* pool, size_t unitSize, size_t unitCount)
+int MemoryPoolCreate(mPool_t* pool, mConfig_t* config)
 {
-    pool->unitSize = unitSize;
-    pool->unitCount = unitCount;
+    pool->unitSize = config->size;
+    pool->unitCount = config->count;
+
+    if(pool->mutex != NULL)
+    {
+        if(config->mutexLock == NULL)
+        {
+            MemoryPoolSetError(pool, "mutexLock is NULL.");
+            return EXIT_FAILURE;
+        }
+
+        if(config->mutexUnlock == NULL)
+        {
+            MemoryPoolSetError(pool, "mutexUnlock is NULL.");
+            return EXIT_FAILURE;
+        }
+
+        pool->mutex = config->mutex;
+        pool->mutexLock = config->mutexLock;
+        pool->mutexUnlock = config->mutexUnlock;
+
+    }
+
     pool->blockCount = 0;
     pool->availableBlockCount = 0;
     pool->firstBlock = NULL;
@@ -36,6 +60,8 @@ int MemoryPoolCreate(mPool_t* pool, size_t unitSize, size_t unitCount)
 /* Alloc memory */
 void* MemoryPoolAlloc(mPool_t* pool, size_t size)
 {
+    MemoryPoolMutexLock(pool);
+
     if(size > pool->unitSize)
     {
         MemoryPoolSetError(pool, "needed size is bigger than unit size.");
@@ -52,12 +78,18 @@ void* MemoryPoolAlloc(mPool_t* pool, size_t size)
         }
     }
 
-    return MemoryPoolAllocFromBlock(pool, block);
+    void* addr = MemoryPoolAllocFromBlock(pool, block);
+
+    MemoryPoolMutexUnlock(pool);
+
+    return addr;
 }
 
 /* Free memory */
 int MemoryPoolFree(mPool_t* pool, void* addr)
 {
+    MemoryPoolMutexLock(pool);
+
     if(addr == NULL)
     {
         MemoryPoolSetError(pool, "free NULL.");
@@ -94,12 +126,16 @@ int MemoryPoolFree(mPool_t* pool, void* addr)
         free(block);
     }
 
+    MemoryPoolMutexUnlock(pool);
+
     return EXIT_SUCCESS;
 }
 
 /* Destroy memory pool */
 void MemoryPoolDestroy(mPool_t* pool)
 {
+    MemoryPoolMutexLock(pool);
+
     mBlock_t* current = NULL;
     mBlock_t* next = pool->firstBlock;
     while(next != NULL)
@@ -115,12 +151,16 @@ void MemoryPoolDestroy(mPool_t* pool)
     pool->lastBlock = NULL;
     pool->firstAvailableBlock = NULL;
     pool->lastAvailableBlock = NULL;
+
+    MemoryPoolMutexUnlock(pool);
 }
 
 
 /* Debug */
 void MemoryPoolDebug(mPool_t* pool)
 {
+    MemoryPoolMutexLock(pool);
+
     size_t totalUnit = pool->blockCount * pool->unitCount;
     size_t availableUnit = 0;
     for(mBlock_t* block = pool->firstAvailableBlock; block != NULL; block = block->nextAvailableBlock)
@@ -141,13 +181,42 @@ void MemoryPoolDebug(mPool_t* pool)
     printf("* total memory      : %u \n", totalMemory);
     printf("* available memory  : %u \n", availableMemory);
     printf("*******************************************************\n");
+
+    MemoryPoolMutexUnlock(pool);
 }
 
 
 
 
 
+/*****************************************************************
+* Description : Lock mutex 
+* Parsms      : pool - memory pool
+*               error - error message
+* Return      : void
+*****************************************************************/
+static void MemoryPoolMutexLock(mPool_t* pool)
+{
+    if(pool->mutex != NULL && pool->mutexLock(pool->mutex) != 0)
+    {
+        MemoryPoolSetError(pool, "lock mutex failure.");
+    }
+}
 
+
+/*****************************************************************
+* Description : Unlock mutex 
+* Parsms      : pool - memory pool
+*               error - error message
+* Return      : void
+*****************************************************************/
+static void MemoryPoolMutexUnlock(mPool_t* pool)
+{
+    if(pool->mutex != NULL && pool->mutexUnlock(pool->mutex) != 0)
+    {
+        MemoryPoolSetError(pool, "unlock mutex failure.");
+    }
+}
 
 
 

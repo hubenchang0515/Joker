@@ -4,74 +4,54 @@ A mempry pool with fixed-size allocation.
 ## APIs
 ```C
 const char* MemoryPoolError(mPool_t* pool);
-int MemoryPoolCreate(mPool_t* pool, size_t unitSize, size_t unitCount);
+int MemoryPoolCreate(mPool_t* pool, mConfig_t* config);
 void* MemoryPoolAlloc(mPool_t* pool, size_t size);
 int MemoryPoolFree(mPool_t* pool, void* addr);
 void MemoryPoolDestroy(mPool_t* pool);
 void MemoryPoolDebug(mPool_t* pool);
 ```
 
-## Usage Demo
+## Usage
+* Create Memory Pool
 ```C
-#include "mempool.h"
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
+/* Init a mutex to memory pool */
+pthread_mutex_t mutex;
+pthread_mutex_init(mutex, NULL);
 
-#define SIZE 128
-#define COUNT 100000
-#define ARRAY 1024
-void* pointers[ARRAY] = { NULL };
+/* Setting memory pool config struct*/
+mConfig_t conf =;
+conf.size = 1024; // 1KB per memory unit
+conf.count = 32;  // 32 units per memory block
+conf.mutex = &mutex;
+conf.mutexLock = (int(*)(void*))pthread_mutex_lock;
+conf.mutexUnlock = (int(*)(void*))pthread_mutex_unlock;
+
+/* Create memory pool */
 mPool_t pool;
+MemoryPoolCreate(&pool, &conf);
+```
 
-void systemCall();
-void poolCall();
+* Alloc Memory Unit
+```C
+void* ptr = MemoryPoolAlloc(&pool, 1024);
+```
 
-int main()
-{
-    MemoryPoolCreate(&pool, SIZE, 32);
-    poolCall();
-    systemCall();
-    return 0;
-}
+* Free Memory
+```C
+MemoryPoolFree(ptr);
+```
 
-void systemCall()
-{
-    int count = COUNT;
-    size_t start = clock();
-    while(count-- > 0)
-    {
-        for(size_t i = 0; i < ARRAY; i++)
-        {
-            pointers[i] = malloc(SIZE);
-        }
+* Destroy Memory Pool
+```C
+MemoryPoolDestroy(&pool);
+```
 
-        for(size_t i = 0; i < ARRAY; i++)
-        {
-            free(pointers[i]);
-        }
-    }
-    size_t end = clock();
-    printf("malloc/free use %d ms\n", end - start);
-}
+* Get Error Message
+```C
+printf("%s\n", MemoryPoolError(&pool));
+```
 
-void poolCall()
-{
-    size_t count = COUNT;
-    size_t start = clock();
-    while(count-- > 0)
-    {
-        for(size_t i = 0; i < ARRAY; i++)
-        {
-            pointers[i] = MemoryPoolAlloc(&pool, SIZE);
-        }
-
-        for(size_t i = 0; i < ARRAY; i++)
-        {
-            MemoryPoolFree(&pool, pointers[i]);
-        }
-    }
-    size_t end = clock();
-    printf("memory pool use %d ms\n", end - start);
-}
+* Disply Memory Pool State
+```C
+MemoryPoolDebug(&pool);
 ```

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+typedef struct JockerMemoryConfigStruct mConfig_t;
 typedef struct JockerMemoryPoolStruct mPool_t;
 typedef struct JockerMemoryBlockStruct mBlock_t;
 typedef struct JockerMemoryUnitStruct mUnit_t;
@@ -12,6 +13,16 @@ typedef struct JockerMemoryUnitStruct mUnit_t;
 #ifndef JOCKER_MEMPOOL_ERROR_SIZE
 #define JOCKER_MEMPOOL_ERROR_SIZE 128
 #endif
+
+/* Struct of config */
+struct JockerMemoryConfigStruct
+{
+    size_t size;                            // size of a unit
+    size_t count;                           // unit count of per-block 
+    void* mutex;                            // mutex
+    int (*mutexLock)(void*);               // lock mutex (return 0 for success)
+    int (*mutexUnlock)(void*);             // unlock mutex (return 0 for success)
+};
 
 /* Struct of memory pool */
 struct JockerMemoryPoolStruct
@@ -25,6 +36,10 @@ struct JockerMemoryPoolStruct
     mBlock_t* firstAvailableBlock;          // the first available memory block
     mBlock_t* lastAvailableBlock;           // the first available memory block
     char error[JOCKER_MEMPOOL_ERROR_SIZE];  // error message
+
+    void* mutex;                            // mutex
+    int (*mutexLock)(void*);              // lock mutex
+    int (*mutexUnlock)(void*);            // unlock mutex
 };
 
 /* Struct of memory block */
@@ -53,7 +68,7 @@ struct JockerMemoryUnitStruct
 #endif
 
 const char* MemoryPoolError(mPool_t* pool);
-int MemoryPoolCreate(mPool_t* pool, size_t unitSize, size_t unitCount);
+int MemoryPoolCreate(mPool_t* pool, mConfig_t* config);
 void* MemoryPoolAlloc(mPool_t* pool, size_t size);
 int MemoryPoolFree(mPool_t* pool, void* addr);
 void MemoryPoolDestroy(mPool_t* pool);
