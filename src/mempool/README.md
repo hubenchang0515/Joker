@@ -1,5 +1,5 @@
 # Memory Pool
-A mempry pool with fixed-size allocation.  
+A thread-safe mempry pool with fixed-size allocation.  
 
 ## APIs
 ```C
