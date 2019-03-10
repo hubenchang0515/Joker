@@ -22,7 +22,7 @@ pthread_mutex_init(mutex, NULL);
 mConfig_t conf =;
 conf.size = 1024; // 1KB per memory unit
 conf.count = 32;  // 32 units per memory block
-conf.mutex = &mutex;
+conf.mutex = &mutex; // NULL for lock-free
 conf.mutexLock = (int(*)(void*))pthread_mutex_lock;
 conf.mutexUnlock = (int(*)(void*))pthread_mutex_unlock;
 
