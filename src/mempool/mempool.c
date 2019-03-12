@@ -119,7 +119,7 @@ int MemoryPoolFree(mPool_t* pool, void* addr)
     }
 
     // remove empty block
-    if(block->availableUnitCount == pool->unitCount)
+    if(block->availableUnitCount == pool->unitCount && pool->availableBlockCount > 1)
     {
         MemoryPoolRemoveAvailableBlockList(pool, block);
         MemoryPoolRemoveTotalBlockList(pool, block);
