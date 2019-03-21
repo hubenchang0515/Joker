@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
+#include <stdint.h>
+#include <limits.h>
 
 /* 内存分配记录表节点 */
 typedef struct lc_detail_node_t lc_detail_node_t;
@@ -155,6 +158,7 @@ int lc_free(void* ptr)
 		{
 			break;
 		}
+		prev2 = curr2;
 	}
 	
 	if(curr2 == NULL) // 理论上不可能
@@ -202,12 +206,20 @@ void lc_detail(void)
 	for(; curr != NULL; curr = curr->next)
 	{
 		
-		//printf("%s\n", curr->function);
-		printf("In file <%s> line <%u> function <%s> : leak %u bytes\n", curr->file, curr->line, curr->function, curr->bytes);
+		#if SIZE_MAX == ULONG_MAX
+			printf("In file <%s> line <%lu> function <%s> : leak %lu bytes\n", curr->file, curr->line, curr->function, curr->bytes);
+		#else
+			printf("In file <%s> line <%u> function <%s> : leak %u bytes\n", curr->file, curr->line, curr->function, curr->bytes);
+		#endif
 		times += 1;
 		bytes += curr->bytes;
 	}
-	printf("Total : %u times %u bytes.\n\n", times, bytes);
+	#if SIZE_MAX == ULONG_MAX
+			printf("Total : %lu times %lu bytes.\n\n", times, bytes);
+		#else
+			printf("Total : %u times %u bytes.\n\n", times, bytes);
+		#endif
+	
 }
 
 
@@ -222,10 +234,46 @@ void lc_statistic(void)
 	for(; curr != NULL; curr = curr->next)
 	{
 		
-		//printf("%s\n", curr->function);
-		printf("In file <%s> line <%u> : leak %u times %u bytes\n", curr->file, curr->line, curr->times, curr->bytes);
+		#if SIZE_MAX == ULONG_MAX
+			printf("In file <%s> line <%lu> : leak %lu times %lu bytes\n", curr->file, curr->line, curr->times, curr->bytes);
+		#else
+			printf("In file <%s> line <%u> : leak %u times %u bytes\n", curr->file, curr->line, curr->times, curr->bytes);
+		#endif
+		
 		times += curr->times;
 		bytes += curr->bytes;
 	}
-	printf("Total : %u times %u bytes.\n\n", times, bytes);
+	
+	#if SIZE_MAX == ULONG_MAX
+		printf("Total : %lu times %lu bytes.\n\n", times, bytes);
+	#else
+		printf("Total : %u times %u bytes.\n\n", times, bytes);
+	#endif
+}
+
+
+/* signal callback */
+void lc_signal_statistic(int sig)
+{
+	(void)sig;
+	lc_statistic();
+	signal(sig, lc_signal_statistic);
+}
+
+void lc_signal_detail(int sig)
+{
+	(void)sig;
+	lc_detail();
+	signal(sig, lc_signal_detail);
+}
+
+/* registe signal */
+void lc_registe_statistic(int sig)
+{
+	signal(sig, lc_signal_statistic);
+}
+
+void lc_registe_detail(int sig)
+{
+	signal(sig, lc_signal_statistic);
 }
